@@ -148,3 +148,53 @@ type PaymentData struct {
 	TTL              int      `json:"ttl,omitempty"`
 	PaymentLinkID    string   `json:"paymentLinkId,omitempty"`
 }
+
+type CreatePaymentOperationDataResponse struct {
+	Data PaymentDataResponse `json:"Data"`
+}
+
+type PaymentDataResponse struct {
+	Purpose          string   `json:"purpose"`
+	Status           string   `json:"status"`
+	Amount           float64  `json:"amount"`
+	OperationID      string   `json:"operationId"`
+	PaymentLink      string   `json:"paymentLink"`
+	ConsumerID       string   `json:"consumerId,omitempty"`
+	MerchantID       string   `json:"merchantId,requiered"`
+	PreAuthorization bool     `json:"preAuthorization"`
+	TTL              int      `json:"ttl,omitempty"`
+	PaymentLinkID    string   `json:"paymentLinkId,omitempty"`
+	PaymentMode      []string `json:"paymentMode"`
+}
+
+type CapturePaymentResponse struct {
+	Data  CaptureData `json:"Data"`
+	Links `json:"Links"`
+	Meta  `json:"Meta"`
+}
+
+type CaptureData struct {
+	Result bool `json:"result"`
+}
+
+type RefundPaymentOperationRequest struct {
+	Data RefundData `json:"Data"`
+}
+
+type RefundData struct {
+	Amount float64 `json:"amount"`
+}
+
+type RefundPaymentOperationResponse struct {
+	Data  RefundRespData `json:"Data"`
+	Links Links          `json:"Links"`
+	Meta  Meta           `json:"Meta"`
+}
+
+type RefundRespData struct {
+	IsRefund    bool    `json:"isRefund"`
+	OperationID string  `json:"operationId"`
+	Amount      float64 `json:"amount"`
+	Date        string  `json:"date"`
+	OrderID     string  `json:"orderId"`
+}

@@ -135,6 +135,7 @@ func TestCreatePaymentOperation(t *testing.T) {
 		purpose       string
 		paymentModes  []string
 		amountOfMoney float64
+		preAuth       bool
 	}{
 		{
 			name:          "Positive Create no paymentID",
@@ -144,14 +145,70 @@ func TestCreatePaymentOperation(t *testing.T) {
 			purpose:       "test",
 			paymentModes:  []string{"sbp", "card"},
 			amountOfMoney: 100.0,
+			preAuth:       true,
 		},
 	}
 
 	for _, tCase := range cases {
 		t.Run(tCase.name, func(t *testing.T) {
-			op, err := c.Acquiring.CreatePaymentOperation(tCase.ctx, tCase.customerCode, tCase.merchantID, tCase.purpose, tCase.paymentModes, tCase.amountOfMoney)
+			op, err := c.Acquiring.CreatePaymentOperation(tCase.ctx, tCase.customerCode, tCase.merchantID, tCase.purpose, tCase.paymentModes, tCase.amountOfMoney, tCase.preAuth)
 			require.NoError(t, err)
 			fmt.Printf("Created Payment Operation - %+v\n", op)
+		})
+	}
+}
+
+func TestCapturePayment(t *testing.T) {
+
+	c := NewClient("https://enter.tochka.com/sandbox/v2", "v1.0", "sandbox.jwt.token")
+
+	cases := []struct {
+		name        string
+		ctx         context.Context
+		operationID string
+	}{
+		{
+			name: "Positive Create no paymentID",
+			ctx:  context.Background(),
+			// operationID: "74a21bae-53ca-4103-a6a8-5ca1d1fcf100",
+			operationID: "e08aa797-3d6d-3834-b8d4-8a90d8fd1244",
+		},
+	}
+
+	for _, tCase := range cases {
+		t.Run(tCase.name, func(t *testing.T) {
+			op, err := c.Acquiring.CapturePayment(tCase.ctx, tCase.operationID)
+			require.NoError(t, err)
+			fmt.Printf("Capture Payment - %+v\n", op)
+		})
+	}
+}
+
+func TestRefundPaymentOperation(t *testing.T) {
+
+	c := NewClient("https://enter.tochka.com/sandbox/v2", "v1.0", "sandbox.jwt.token")
+
+	cases := []struct {
+		name          string
+		ctx           context.Context
+		operationID   string
+		amountOfMoney float64
+	}{
+		{
+			name: "Positive Create no paymentID",
+			ctx:  context.Background(),
+			// operationID: "74a21bae-53ca-4103-a6a8-5ca1d1fcf100",
+			// operationID:   "e08aa797-3d6d-3834-b8d4-8a90d8fd1244",
+			operationID:   "48232c9a-ce82-1593-3cb6-5c85a1ffef8f",
+			amountOfMoney: 1234.0,
+		},
+	}
+
+	for _, tCase := range cases {
+		t.Run(tCase.name, func(t *testing.T) {
+			refund, err := c.Acquiring.RefundPaymentOperation(tCase.ctx, tCase.operationID, tCase.amountOfMoney)
+			require.NoError(t, err)
+			fmt.Printf("Refund Operation - %+v\n", refund)
 		})
 	}
 }

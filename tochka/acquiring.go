@@ -164,11 +164,14 @@ func (c *AcquiringClient) GetRetailers(ctx context.Context, customerCode string)
 	return &data, nil
 }
 
-// TODO: add optional params: redirectUrl,failRedirectUrl, saveCard, consumerId, merchntId, preAthorization, ttl, paymentLinkId
+// TODO: add optional params: redirectUrl,failRedirectUrl, saveCard, consumerId, preAthorization, ttl, paymentLinkId
 func (c *AcquiringClient) CreatePaymentOperation(
 	ctx context.Context,
-	customerCode, merchantID, purpose string, paymentModes []string, amountOfMoney float64,
-) (*dto.CreatePaymentOperationData, error) {
+	customerCode, merchantID, purpose string,
+	paymentModes []string,
+	amountOfMoney float64,
+	preAuth bool,
+) (*dto.CreatePaymentOperationDataResponse, error) {
 	u, err := c.client.buildURL(c.basePath, "/payments")
 	if err != nil {
 		return nil, err
@@ -176,11 +179,12 @@ func (c *AcquiringClient) CreatePaymentOperation(
 
 	op := dto.CreatePaymentOperationData{
 		Data: dto.PaymentData{
-			CustomerCode: customerCode,
-			Amount:       amountOfMoney,
-			Purpose:      purpose,
-			PaymentMode:  paymentModes,
-			MerchantID:   merchantID,
+			CustomerCode:     customerCode,
+			Amount:           amountOfMoney,
+			Purpose:          purpose,
+			PaymentMode:      paymentModes,
+			MerchantID:       merchantID,
+			PreAuthorization: preAuth,
 		},
 	}
 
@@ -201,7 +205,76 @@ func (c *AcquiringClient) CreatePaymentOperation(
 		return nil, err
 	}
 
-	var data dto.CreatePaymentOperationData
+	var data dto.CreatePaymentOperationDataResponse
+	err = json.Unmarshal(respBody, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (c *AcquiringClient) CapturePayment(ctx context.Context, operationID string) (*dto.CapturePaymentResponse, error) {
+	path := "/payments/" + operationID + "/capture"
+	u, err := c.client.buildURL(c.basePath, path)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := c.client.newRequest(ctx, http.MethodPost, u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Request - %v", req)
+
+	respBody, err := c.client.do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var data dto.CapturePaymentResponse
+	err = json.Unmarshal(respBody, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (c *AcquiringClient) RefundPaymentOperation(
+	ctx context.Context, operationID string, amountOfMoney float64,
+) (*dto.RefundPaymentOperationResponse, error) {
+	path := "/payments/" + operationID + "/refund"
+	u, err := c.client.buildURL(c.basePath, path)
+	if err != nil {
+		return nil, err
+	}
+
+	op := dto.RefundPaymentOperationRequest{
+		Data: dto.RefundData{
+			Amount: amountOfMoney,
+		},
+	}
+
+	body, err := json.Marshal(op)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := c.client.newRequest(ctx, http.MethodPost, u.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Request - %v", req)
+
+	respBody, err := c.client.do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var data dto.RefundPaymentOperationResponse
 	err = json.Unmarshal(respBody, &data)
 	if err != nil {
 		return nil, err
