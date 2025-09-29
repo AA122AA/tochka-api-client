@@ -56,20 +56,21 @@ func (c *Client) newRequest(ctx context.Context, method, url string, body []byte
 	return req, nil
 }
 
-func (c *Client) do(req *http.Request) ([]byte, func() error, error) {
+func (c *Client) do(req *http.Request) ([]byte, error) {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, nil, fmt.Errorf("do: error while doing request - %w", err)
+		return nil, fmt.Errorf("do: error while doing request - %w", err)
 	}
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, nil, fmt.Errorf("do: error while reading body - %w", err)
+		return nil, fmt.Errorf("do: error while reading body - %w", err)
 	}
+	defer req.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("do: unexpected status code: %d, status %v, body: %v", resp.StatusCode, resp.Status, string(respBody))
+		return nil, fmt.Errorf("do: unexpected status code: %d, status %v, body: %v", resp.StatusCode, resp.Status, string(respBody))
 	}
 
-	return respBody, resp.Body.Close, nil
+	return respBody, nil
 }
